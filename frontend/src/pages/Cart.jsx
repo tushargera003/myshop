@@ -5,9 +5,9 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion"; // Animations
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 const Cart = () => {
   const { cartItems, updateQty, removeFromCart } = useContext(CartContext); // Using Context
-  // toast.configure();
 
   const handleCheckout = async () => {
     try {
@@ -44,9 +44,9 @@ const Cart = () => {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="container mx-auto p-8"
+      className="container mx-auto p-4 sm:p-8"
     >
-      <h1 className="text-5xl font-extrabold text-center text-blue-600 mb-8">
+      <h1 className="text-3xl sm:text-5xl font-extrabold text-center text-blue-600 mb-8">
         🛒 Your Cart
       </h1>
 
@@ -60,7 +60,7 @@ const Cart = () => {
           Your cart is empty! Start shopping now.
         </motion.p>
       ) : (
-        <div className="max-w-5xl mx-auto bg-white/70 backdrop-blur-md p-8 rounded-lg shadow-xl border border-gray-200">
+        <div className="max-w-5xl mx-auto bg-white/70 backdrop-blur-md p-4 sm:p-8 rounded-lg shadow-xl border border-gray-200">
           <AnimatePresence>
             {cartItems.map((item) => (
               <motion.div
@@ -69,15 +69,18 @@ const Cart = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center border-b border-gray-300 py-5"
+                className="flex flex-col sm:flex-row items-center justify-between border-b border-gray-300 py-5"
               >
+                {/* Product Image */}
                 <img
                   src={item.product?.image} // Use optional chaining
                   alt={item.product?.name} // Use optional chaining
-                  className="w-24 h-24 object-contain rounded-xl shadow-md"
+                  className="w-20 h-20 sm:w-24 sm:h-24 object-contain rounded-xl shadow-md"
                 />
-                <div className="ml-6 flex-grow">
-                  <h2 className="text-2xl font-semibold">
+
+                {/* Product Info */}
+                <div className="flex-grow ml-0 sm:ml-6 mt-4 sm:mt-0 text-center sm:text-left">
+                  <h2 className="text-xl sm:text-2xl font-semibold">
                     {item.product?.name} {/* Use optional chaining */}
                   </h2>
                   <p className="text-gray-600 text-lg font-medium">
@@ -86,7 +89,7 @@ const Cart = () => {
                 </div>
 
                 {/* Quantity Controls */}
-                <div className="flex items-center">
+                <div className="flex items-center mt-4 sm:mt-0">
                   <button
                     className="px-3 py-1 bg-gray-300 text-gray-700 rounded-l transition-transform hover:scale-110"
                     onClick={() =>
@@ -108,7 +111,7 @@ const Cart = () => {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="ml-6 px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-md transition-all"
+                  className="ml-0 sm:ml-6 mt-4 sm:mt-0 px-4 sm:px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-md transition-all"
                   onClick={() => removeFromCart(item.product._id)}
                 >
                   Remove
@@ -118,7 +121,7 @@ const Cart = () => {
           </AnimatePresence>
 
           {/* Cart Summary */}
-          <div className="text-right mt-6">
+          <div className="text-center sm:text-right mt-6">
             <p className="text-2xl font-bold text-gray-700">
               Total: ₹
               {cartItems.reduce(
@@ -128,7 +131,7 @@ const Cart = () => {
             </p>
             <button
               onClick={handleCheckout}
-              className="mt-5 px-8 py-3 inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+              className="mt-5 px-6 sm:px-8 py-3 inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-lg transition-all hover:scale-105 hover:shadow-xl"
             >
               🛍️ Proceed to Checkout
             </button>

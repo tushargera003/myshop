@@ -49,10 +49,8 @@ const Products = () => {
     );
     if (isInWishlist) {
       removeFromWishlist(product._id);
-      toast.success("Product removed from wishlist!");
     } else {
       addToWishlist(product._id);
-      toast.success("Product added to wishlist!");
     }
   };
 

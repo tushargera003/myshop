@@ -52,10 +52,8 @@ const ProductDetails = () => {
     );
     if (isInWishlist) {
       removeFromWishlist(product._id);
-      toast.success("Removed from wishlist!");
     } else {
       addToWishlist(product._id);
-      toast.success("Added to wishlist!");
     }
   };
 
@@ -66,10 +64,8 @@ const ProductDetails = () => {
     );
     if (isInWishlist) {
       removeFromWishlist(product._id);
-      toast.success("Removed from wishlist!");
     } else {
       addToWishlist(product._id);
-      toast.success("Added to wishlist!");
     }
   };
 

@@ -27,9 +27,14 @@ const Navbar = () => {
     window.location.reload(); // Reload the page to reset the state
   };
 
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (profileOpen && !event.target.closest(".profile-dropdown")) {
+      if (
+        profileOpen &&
+        !event.target.closest(".profile-dropdown") &&
+        !event.target.closest(".mobile-profile-dropdown")
+      ) {
         setProfileOpen(false);
       }
     };
@@ -218,13 +223,13 @@ const Navbar = () => {
               )}
             </Link>
             {user ? (
-              <div className="relative flex items-center space-x-4">
-                <span className="text-lg font-medium">Hello, {user.name}</span>
+              <div className="relative mobile-profile-dropdown">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="flex items-center space-x-2"
                 >
                   <User size={24} />
+                  <span>Profile</span>
                 </button>
                 <AnimatePresence>
                   {profileOpen && (
@@ -233,7 +238,7 @@ const Navbar = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-2 bg-white text-black shadow-lg rounded-lg w-48"
+                      className="mt-2 bg-white text-black shadow-lg rounded-lg w-48"
                     >
                       <Link
                         to="/profile"

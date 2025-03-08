@@ -3,7 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { CartContext } from "../context/CartContext.jsx"; // Import CartContext
 import { motion } from "framer-motion";
 import axios from "axios"; // Import axios for coupon API call
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const Checkout = () => {
   const { cartItems, clearCart, loading } = useContext(CartContext); // Destructure clearCart
   const navigate = useNavigate();
@@ -18,8 +19,21 @@ const Checkout = () => {
   const [couponId, setCouponId] = useState(null); // Track coupon ID
 
   const applyCoupon = async () => {
+    // Check if the user is logged in
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login first to apply the coupon.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return; // Stop further execution
+    }
+
     try {
-      const token = localStorage.getItem("token");
       const userId = JSON.parse(localStorage.getItem("user"))._id; // Get user ID
       const cartTotal = cartItems.reduce(
         (acc, item) => acc + item.product.price * item.qty,
@@ -74,7 +88,20 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if the user is logged in
     const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login first to place your order.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return; // Stop further execution
+    }
 
     const order = {
       items: cartItems.map((item) => ({
@@ -151,6 +178,7 @@ const Checkout = () => {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="container mx-auto p-6"
     >
+      <ToastContainer />
       <h1 className="text-5xl font-extrabold text-center text-blue-600 mb-8">
         🛍️ Checkout
       </h1>

@@ -2,8 +2,6 @@ import { Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-// import PaymentSuccess from "./pages/PaymentSuccess";
-// import PaymentFailed from "./pages/PaymentFailed.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
 import AdminLayout from "./components/AdminLayout";
@@ -15,6 +13,7 @@ import ProductDetails from "./components/ProductDetails";
 import useUser from "./hooks/useUser"; // Import the custom hook
 import AboutUs from "./pages/AboutUs.jsx";
 import Wishlist from "./pages/Wishlist.jsx";
+import ProtectedRoute from "./components/ProtectedRoute"; // Import the ProtectedRoute component
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./pages/Home"));
@@ -22,7 +21,6 @@ const Products = lazy(() => import("./pages/Products"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
-// const PaymentPage = lazy(() => import("./pages/Paymentpage"));
 const Auth = lazy(() => import("./pages/Auth"));
 
 // Admin Routes
@@ -64,18 +62,18 @@ function App() {
               <Route path="/product/:id" element={<ProductDetails />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/about" element={<AboutUs />} />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/orders" element={<OrderHistory />} />
-              {/* <Route path="/payment" element={<PaymentPage />} />
-              <Route path="/payment-success" element={<PaymentSuccess />} />
-              <Route path="/payment-failed" element={<PaymentFailed />} /> */}
-              <Route
-                path="/order-confirmation"
-                element={<OrderConfirmation />}
-              />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/checkout" element={<Checkout />} />
+              {/* Protected Routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/orders" element={<OrderHistory />} />
+                <Route
+                  path="/order-confirmation"
+                  element={<OrderConfirmation />}
+                />
+              </Route>
 
               {/* Admin Routes - Always defined */}
               <Route path="/admin" element={<AdminLayout />}>

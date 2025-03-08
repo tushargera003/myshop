@@ -132,23 +132,23 @@ const Auth = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 px-6">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 px-4 sm:px-6">
       <ToastContainer position="top-right" autoClose={3000} />
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-5xl bg-white shadow-2xl rounded-2xl flex relative overflow-hidden"
-        style={{ height: "500px" }}
+        className="w-full max-w-5xl bg-white shadow-2xl rounded-2xl flex flex-col md:flex-row relative overflow-hidden"
+        style={{ minHeight: "500px" }}
       >
         {/* Left Side - Form Container */}
-        <div className="w-1/2 flex flex-col justify-center items-center p-10">
+        <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 sm:p-10">
           <motion.h2
             key={isLogin ? "login-heading" : "signup-heading"}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="text-3xl font-bold mb-6 text-gray-800"
+            className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800"
           >
             {isLogin ? "Login" : "Sign Up"}
           </motion.h2>
@@ -306,12 +306,12 @@ const Auth = () => {
           </p>
         </div>
 
-        {/* Right Side - Animated Text */}
+        {/* Right Side - Animated Text (Hidden on small screens) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="w-1/2 flex items-center justify-center p-10 text-center bg-gradient-to-r from-blue-500 to-purple-500 text-white transition-all duration-500"
+          className="hidden md:flex md:w-1/2 items-center justify-center p-10 text-center bg-gradient-to-r from-blue-500 to-purple-500 text-white transition-all duration-500"
         >
           <motion.div
             key={isLogin ? "login-text" : "signup-text"}

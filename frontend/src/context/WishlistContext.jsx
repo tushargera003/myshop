@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
+import { toast } from "react-toastify"; // Import toast
 
 export const WishlistContext = createContext();
 
@@ -42,7 +43,7 @@ export const WishlistProvider = ({ children }) => {
 
     // If no token, show an error and return
     if (!token) {
-      console.error("No token found. User is not logged in.");
+      toast.error("Please login to add items to your wishlist.");
       return;
     }
 
@@ -57,8 +58,10 @@ export const WishlistProvider = ({ children }) => {
         }
       );
       fetchWishlist(); // Refresh wishlist
+      toast.success("Item added to wishlist!"); // Show success toast
     } catch (error) {
       console.error("Failed to add to wishlist:", error);
+      toast.error("Failed to add item to wishlist."); // Show error toast
     }
   };
 
@@ -68,7 +71,7 @@ export const WishlistProvider = ({ children }) => {
 
     // If no token, show an error and return
     if (!token) {
-      console.error("No token found. User is not logged in.");
+      toast.error("Please login to remove items from your wishlist.");
       return;
     }
 
@@ -83,8 +86,10 @@ export const WishlistProvider = ({ children }) => {
         }
       );
       fetchWishlist(); // Refresh wishlist
+      toast.success("Item removed from wishlist!"); // Show success toast
     } catch (error) {
       console.error("Failed to remove from wishlist:", error);
+      toast.error("Failed to remove item from wishlist."); // Show error toast
     }
   };
 
