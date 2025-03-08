@@ -24,7 +24,7 @@ const limiter = rateLimit({
   app.use(helmet());
   app.use(
     cors({
-      origin: ["http://localhost:5173", "https://yourwebsite.com"],
+      origin: ["http://localhost:5173", "https://myshop-teal-nine.vercel.app"],
       credentials: true,
     })
   );
