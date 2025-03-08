@@ -7,7 +7,7 @@ export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
-
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   // Function to get token
@@ -21,6 +21,7 @@ export const CartProvider = ({ children }) => {
         // If not logged in, use local storage
         const localCart = JSON.parse(localStorage.getItem("cartItems")) || [];
         setCartItems(localCart);
+        setLoading(false); // Set loading to false
         return;
       }
 
@@ -45,8 +46,22 @@ export const CartProvider = ({ children }) => {
         localStorage.removeItem("cartItems");
         navigate("/auth");
       }
+    } finally {
+      setLoading(false); // Set loading to false after fetch completes
     }
   };
+
+  // Fetch cart on component mount
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      fetchCart(); // Fetch backend cart when logged in
+    } else {
+      const localCart = JSON.parse(localStorage.getItem("cartItems")) || [];
+      setCartItems(localCart); // Load from local storage if not logged in
+      setLoading(false); // Set loading to false
+    }
+  }, []); // Run only on mount
 
   // Add item to cart
   const addToCart = async (productId, qty) => {
@@ -223,6 +238,7 @@ export const CartProvider = ({ children }) => {
         updateQty,
         removeFromCart,
         clearCart,
+        loading,
       }}
     >
       {children}

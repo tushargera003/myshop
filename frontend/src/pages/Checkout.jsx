@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import axios from "axios"; // Import axios for coupon API call
 
 const Checkout = () => {
-  const { cartItems, clearCart } = useContext(CartContext); // Destructure clearCart
+  const { cartItems, clearCart, loading } = useContext(CartContext); // Destructure clearCart
   const navigate = useNavigate();
 
   // Coupon state
@@ -50,13 +50,6 @@ const Checkout = () => {
     setCouponApplied(false); // Mark coupon as not applied
     setCouponMessage(""); // Clear message
   };
-
-  // Redirect to cart if empty
-  useEffect(() => {
-    if (cartItems.length === 0) {
-      navigate("/cart"); // Agar cart empty hai toh checkout nahi khulega
-    }
-  }, [cartItems, navigate]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -134,6 +127,22 @@ const Checkout = () => {
       console.error("Error submitting order:", error);
     }
   };
+
+  // Redirect to cart if empty
+  useEffect(() => {
+    if (!loading && cartItems.length === 0) {
+      navigate("/cart"); // Redirect only if cart is empty and not loading
+    }
+  }, [cartItems, loading, navigate]);
+
+  // Show loading message if cart is still being fetched
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-xl">Loading your cart...</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -215,7 +224,7 @@ const Checkout = () => {
             <div className="space-y-4">
               {cartItems.map((item) => (
                 <motion.div
-                  key={item._id}
+                  key={item.product._id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   className="flex items-center justify-between bg-white p-3 rounded-lg shadow"

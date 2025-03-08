@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Auth = () => {
@@ -16,21 +15,74 @@ const Auth = () => {
     phone: "",
   });
   const [loginMethod, setLoginMethod] = useState("email"); // 'email' or 'phone'
-
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
+  const [errors, setErrors] = useState({
+    email: "",
+    phone: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Helper function to validate Gmail or Yahoo email
+  const isValidEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|yahoo)\.com$/;
+    return emailRegex.test(email);
+  };
+
+  // Helper function to validate a 10-digit Indian phone number
+  const isValidPhone = (phone) => {
+    const phoneRegex = /^[6-9]\d{9}$/; // Indian phone numbers start with 6-9 and have 10 digits
+    return phoneRegex.test(phone);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Real-time validation
+    if (name === "email" && value) {
+      setErrors((prev) => ({
+        ...prev,
+        email: isValidEmail(value)
+          ? ""
+          : "Please enter a valid Gmail or Yahoo email",
+      }));
+    }
+
+    if (name === "phone" && value) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: isValidPhone(value)
+          ? ""
+          : "Please enter a valid 10-digit Indian phone number",
+      }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     // Frontend validation for signup
-    if (!isLogin && (!formData.name || !formData.email || !formData.phone)) {
-      toast.error("Name, Email, and Phone are required for signup");
-      setIsLoading(false);
-      return;
+    if (!isLogin) {
+      if (!formData.name || !formData.email || !formData.phone) {
+        toast.error("Name, Email, and Phone are required for signup");
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate email
+      if (!isValidEmail(formData.email)) {
+        toast.error("Please enter a valid Gmail or Yahoo email address");
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate phone number
+      if (!isValidPhone(formData.phone)) {
+        toast.error("Please enter a valid 10-digit Indian phone number");
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
@@ -68,17 +120,17 @@ const Auth = () => {
     }
   };
 
-  const navigate = useNavigate();
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      navigate("/"); // Agar login hai toh home page pe bhej do
+      navigate("/"); // Redirect to home if already logged in
     }
-  }, []);
+  }, [navigate]);
+
   const handleSocialLogin = (provider) => {
     toast.info(`${provider} login-signup will be available soon!`);
   };
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 px-6">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -119,35 +171,45 @@ const Auth = () => {
             )}
 
             {!isLogin && (
-              <motion.input
-                key="email"
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              />
+              <>
+                <motion.input
+                  key="email"
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
+              </>
             )}
 
             {!isLogin && (
-              <motion.input
-                key="phone"
-                type="text"
-                name="phone"
-                placeholder="Phone Number"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              />
+              <>
+                <motion.input
+                  key="phone"
+                  type="text"
+                  name="phone"
+                  placeholder="Phone Number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                />
+                {errors.phone && (
+                  <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                )}
+              </>
             )}
 
             {/* Login Method Toggle */}
