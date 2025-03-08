@@ -19,14 +19,13 @@ const useUser = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log("Response:", response); // Log the response object
 
         if (!response.ok) {
           throw new Error("Failed to fetch user details");
         }
 
         const data = await response.json(); // Parse the response body as JSON
-        console.log("Data:", data); // Log the parsed data
+
 
         setUser(data); // Set the user state
       } catch (error) {

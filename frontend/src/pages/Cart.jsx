@@ -1,21 +1,42 @@
 import { useContext } from "react";
 import { CartContext } from "../context/CartContext.jsx"; // Importing Cart Context
 import { Link } from "react-router-dom";
+import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion"; // Animations
-
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const Cart = () => {
-  const { cartItems, setCartItems } = useContext(CartContext); // Using Context
+  const { cartItems, updateQty, removeFromCart } = useContext(CartContext); // Using Context
+  // toast.configure();
 
-  // Quantity Update Function
-  const updateQty = (id, qty) => {
-    setCartItems(
-      cartItems.map((item) => (item.id === id ? { ...item, qty: qty } : item))
-    );
-  };
+  const handleCheckout = async () => {
+    try {
+      if (cartItems.some((item) => !item.product || !item.product._id)) {
+        toast.error(
+          "One or more products in your cart are invalid. Please refresh."
+        );
+        return;
+      }
 
-  // Remove Item Function
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/orders/validate-stock`,
+        {
+          items: cartItems.map((item) => ({
+            product: item.product._id,
+            qty: item.qty,
+          })),
+        }
+      );
+
+      // Stock valid hai toh checkout page pe bhej do
+      window.location.href = "/checkout";
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "An error occurred during stock validation. Please try again."
+      );
+    }
   };
 
   return (
@@ -43,7 +64,7 @@ const Cart = () => {
           <AnimatePresence>
             {cartItems.map((item) => (
               <motion.div
-                key={`${item.id}-${item.name}`}
+                key={`${item._id}-${item.product?._id || "undefined"}`} // Use optional chaining
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
@@ -51,14 +72,16 @@ const Cart = () => {
                 className="flex items-center border-b border-gray-300 py-5"
               >
                 <img
-                  src={item.image}
-                  alt={item.name}
+                  src={item.product?.image} // Use optional chaining
+                  alt={item.product?.name} // Use optional chaining
                   className="w-24 h-24 object-contain rounded-xl shadow-md"
                 />
                 <div className="ml-6 flex-grow">
-                  <h2 className="text-2xl font-semibold">{item.name}</h2>
+                  <h2 className="text-2xl font-semibold">
+                    {item.product?.name} {/* Use optional chaining */}
+                  </h2>
                   <p className="text-gray-600 text-lg font-medium">
-                    ₹{item.price}
+                    ₹{item.product?.price} {/* Use optional chaining */}
                   </p>
                 </div>
 
@@ -67,7 +90,7 @@ const Cart = () => {
                   <button
                     className="px-3 py-1 bg-gray-300 text-gray-700 rounded-l transition-transform hover:scale-110"
                     onClick={() =>
-                      updateQty(item.id, Math.max(1, item.qty - 1))
+                      updateQty(item.product._id, Math.max(1, item.qty - 1))
                     }
                   >
                     -
@@ -75,7 +98,7 @@ const Cart = () => {
                   <span className="px-5 text-lg font-medium">{item.qty}</span>
                   <button
                     className="px-3 py-1 bg-gray-300 text-gray-700 rounded-r transition-transform hover:scale-110"
-                    onClick={() => updateQty(item.id, item.qty + 1)}
+                    onClick={() => updateQty(item.product._id, item.qty + 1)}
                   >
                     +
                   </button>
@@ -86,7 +109,7 @@ const Cart = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className="ml-6 px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-md transition-all"
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => removeFromCart(item.product._id)}
                 >
                   Remove
                 </motion.button>
@@ -98,14 +121,17 @@ const Cart = () => {
           <div className="text-right mt-6">
             <p className="text-2xl font-bold text-gray-700">
               Total: ₹
-              {cartItems.reduce((acc, item) => acc + item.price * item.qty, 0)}
+              {cartItems.reduce(
+                (acc, item) => acc + (item.product?.price || 0) * item.qty,
+                0
+              )}
             </p>
-            <Link
-              to="/checkout"
+            <button
+              onClick={handleCheckout}
               className="mt-5 px-8 py-3 inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-lg transition-all hover:scale-105 hover:shadow-xl"
             >
               🛍️ Proceed to Checkout
-            </Link>
+            </button>
           </div>
         </div>
       )}

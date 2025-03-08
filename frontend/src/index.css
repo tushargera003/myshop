@@ -5,3 +5,50 @@
 body {
   @apply bg-gradient-to-r from-blue-100 to-purple-100;
 }
+
+
+
+/* global.css */
+
+/* Remove default outline and pointer on focus */
+*:focus {
+  outline: none !important;
+}
+
+/* Remove default cursor styles */
+a,
+button,
+input,
+select,
+textarea {
+  cursor: default;
+}
+
+/* Optional: Add custom focus styles for accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #3b82f6; /* Blue outline for accessibility */
+  outline-offset: 2px;
+}
+
+/* global.css */
+
+/* Disable text selection globally */
+* {
+  user-select: none;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE/Edge */
+}
+
+/* Enable text selection for inputs and textareas */
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text; /* Safari */
+  -moz-user-select: text; /* Firefox */
+  -ms-user-select: text; /* IE/Edge */
+}

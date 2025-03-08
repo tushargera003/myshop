@@ -4,6 +4,10 @@ import dotenv from "dotenv";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";;
+import cartRoutes from "./routes/cartRoutes.js";
+import couponRoutes from "./routes/couponRoutes.js";
+import wishlistRoutes from "./routes/wishlistRoutes.js";
+import invoiceRoutes from "./routes/invoiceRoutes.js";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
@@ -12,7 +16,7 @@ dotenv.config();
 const app = express();
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Max 100 requests per IP
+    max: 1000, // Max 100 requests per IP
     message: "Too many requests from this IP, please try again later.",
   });
   
@@ -29,6 +33,9 @@ app.use(compression());
 app.use("/api/admin", adminRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api", couponRoutes);
 mongoose.connect(process.env.MONGO_URI).then(() => {
   console.log("MongoDB Connected");
   app.listen(5000, () => console.log("Server running on port 5000"));

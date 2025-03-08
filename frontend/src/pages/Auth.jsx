@@ -47,7 +47,6 @@ const Auth = () => {
           }
         : formData;
 
-      console.log("Sending Data:", loginData);
       const { data } = await axios.post(url, loginData, {
         headers: { "Content-Type": "application/json" },
       });
@@ -77,7 +76,9 @@ const Auth = () => {
       navigate("/"); // Agar login hai toh home page pe bhej do
     }
   }, []);
-
+  const handleSocialLogin = (provider) => {
+    toast.info(`${provider} login-signup will be available soon!`);
+  };
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 px-6">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -220,7 +221,10 @@ const Auth = () => {
 
           {/* Google Login */}
           <div className="mt-6 flex justify-center">
-            <button className="p-2 bg-white border border-gray-300 rounded-full hover:bg-gray-100 transition-all flex items-center gap-2 px-4">
+            <button
+              className="p-2 bg-white border border-gray-300 rounded-full hover:bg-gray-100 transition-all flex items-center gap-2 px-4"
+              onClick={() => handleSocialLogin("Google")}
+            >
               <FcGoogle className="w-6 h-6" />
               <span className="text-gray-700 font-medium">
                 {isLogin ? "Login" : "Sign Up"} with Google

@@ -1,10 +1,11 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
+import { WishlistProvider } from "./context/WishlistContext.jsx";
 import AdminLayout from "./components/AdminLayout";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,6 +13,8 @@ import Profile from "./pages/Profile.jsx";
 import OrderHistory from "./pages/OrderHistory.jsx";
 import ProductDetails from "./components/ProductDetails";
 import useUser from "./hooks/useUser"; // Import the custom hook
+import AboutUs from "./pages/AboutUs.jsx";
+import Wishlist from "./pages/Wishlist.jsx";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./pages/Home"));
@@ -37,7 +40,7 @@ function App() {
 
   return (
     <CartProvider>
-      <Router>
+      <WishlistProvider>
         <div>
           <ToastContainer
             position="top-right"
@@ -60,6 +63,8 @@ function App() {
               <Route path="/products" element={<Products />} />
               <Route path="/product/:id" element={<ProductDetails />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/orders" element={<OrderHistory />} />
@@ -96,7 +101,7 @@ function App() {
             pauseOnHover
           />
         </div>
-      </Router>
+      </WishlistProvider>
     </CartProvider>
   );
 }

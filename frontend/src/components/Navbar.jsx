@@ -74,6 +74,14 @@ const Navbar = () => {
             Products
           </Link>
           <Link
+            to="/about"
+            className={`hover:text-gray-200 transition ${
+              location.pathname === "/about" ? "font-bold underline" : ""
+            }`}
+          >
+            About Us
+          </Link>
+          <Link
             to="/cart"
             className={`hover:text-gray-200 transition relative flex items-center ${
               location.pathname === "/cart" ? "font-bold underline" : ""
@@ -124,6 +132,12 @@ const Navbar = () => {
                       className="block px-4 py-2 hover:bg-gray-200"
                     >
                       My Orders
+                    </Link>
+                    <Link
+                      to="/wishlist"
+                      className="block px-4 py-2 hover:bg-gray-200"
+                    >
+                      My wishlist
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -183,6 +197,14 @@ const Navbar = () => {
               Products
             </Link>
             <Link
+              to="/about"
+              className={`block hover:text-gray-200 transition ${
+                location.pathname === "/about" ? "font-bold underline" : ""
+              }`}
+            >
+              About Us
+            </Link>
+            <Link
               to="/cart"
               className={`block hover:text-gray-200 transition relative flex items-center ${
                 location.pathname === "/cart" ? "font-bold underline" : ""
@@ -224,6 +246,12 @@ const Navbar = () => {
                         className="block px-4 py-2 hover:bg-gray-200"
                       >
                         My Orders
+                      </Link>
+                      <Link
+                        to="/wishlist"
+                        className="block px-4 py-2 hover:bg-gray-200"
+                      >
+                        My wishlist
                       </Link>
                       <button
                         onClick={handleLogout}

@@ -2,17 +2,63 @@ import { useEffect, useContext, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { CartContext } from "../context/CartContext.jsx"; // Import CartContext
 import { motion } from "framer-motion";
+import axios from "axios"; // Import axios for coupon API call
 
 const Checkout = () => {
   const { cartItems, clearCart } = useContext(CartContext); // Destructure clearCart
   const navigate = useNavigate();
 
+  // Coupon state
+  const [coupon, setCoupon] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponApplied, setCouponApplied] = useState(false); // Track if coupon is applied
+  const [couponMessage, setCouponMessage] = useState(""); // Success or error message
+
+  // Apply Coupon Function
+  const [couponId, setCouponId] = useState(null); // Track coupon ID
+
+  const applyCoupon = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const userId = JSON.parse(localStorage.getItem("user"))._id; // Get user ID
+      const cartTotal = cartItems.reduce(
+        (acc, item) => acc + item.product.price * item.qty,
+        0
+      );
+
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/apply-coupon`,
+        {
+          code: coupon.toUpperCase(),
+          userId,
+          cartTotal,
+        }
+      );
+
+      setDiscount(data.discount);
+      setCouponApplied(true);
+      setCouponId(data.couponId); // Store coupon ID
+      setCouponMessage(data.message); // Show success message
+    } catch (error) {
+      setCouponMessage(error.response?.data?.message || "Invalid coupon ❌"); // Show error message
+    }
+  };
+
+  // Remove Discount Function
+  const removeDiscount = () => {
+    setDiscount(0);
+    setCouponApplied(false); // Mark coupon as not applied
+    setCouponMessage(""); // Clear message
+  };
+
+  // Redirect to cart if empty
   useEffect(() => {
     if (cartItems.length === 0) {
       navigate("/cart"); // Agar cart empty hai toh checkout nahi khulega
     }
   }, [cartItems, navigate]);
 
+  // Form state
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -26,32 +72,39 @@ const Checkout = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Calculate total and discounted total
+  const total = cartItems.reduce(
+    (acc, item) => acc + item.product.price * item.qty,
+    0
+  );
+  const discountedTotal = Math.max(0, total - discount); // Ensure total is never negative
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
 
     const order = {
       items: cartItems.map((item) => ({
-        product: item._id,
-        name: item.name,
-        price: item.price,
-        image: item.image,
+        product: item.product._id,
+        name: item.product.name,
+        price: item.product.price,
+        image: item.product.image,
         qty: item.qty,
       })),
-      totalAmount: cartItems.reduce(
-        (acc, item) => acc + item.price * item.qty,
-        0
-      ),
+      originalTotal: total, // Total before discount
+      discountedTotal: Math.max(0, total - discount), // Total after discount
       shippingAddress: {
         address: formData.address,
         city: formData.city,
         postalCode: formData.pincode,
         country: "India",
+        phone: formData.phone, // Add phone number here
       },
       paymentMethod:
         formData.paymentMethod === "COD"
           ? "Cash on Delivery"
           : formData.paymentMethod,
+      couponId: couponApplied ? couponId : null, // Include coupon ID if applied
     };
 
     try {
@@ -69,10 +122,8 @@ const Checkout = () => {
 
       if (response.ok) {
         if (formData.paymentMethod === "COD") {
-          // Redirect to Order Confirmation for COD
           navigate("/order-confirmation", { state: { fromCheckout: true } });
         } else {
-          // Redirect to Payment Page for other methods
           navigate("/payment", { state: { order } });
         }
         setTimeout(() => clearCart(), 500); // Clear cart after navigation
@@ -106,16 +157,24 @@ const Checkout = () => {
           <h2 className="text-2xl font-semibold mb-4">📋 Shipping Details</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             {["name", "address", "city", "pincode", "phone"].map((field) => (
-              <div key={field} className="relative">
+              <div key={field} className="relative ">
                 <input
                   type={field === "phone" ? "tel" : "text"}
                   name={field}
-                  placeholder=" "
+                  value={formData[field]} // Input value set karega
+                  onChange={handleChange} // Change detect karega
                   required
-                  className="peer w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
-                  onChange={handleChange}
+                  className="peer w-full p-5 border rounded-lg focus:ring-2 focus:ring-blue-400"
                 />
-                <label className="absolute left-3 top-3 text-gray-400 peer-placeholder-shown:top-5 peer-placeholder-shown:text-base transition-all peer-focus:top-3 peer-focus:text-sm peer-focus:text-blue-500">
+                <label
+                  className={`absolute left-3 top-0 text-gray-400 transition-all 
+                  ${
+                    formData[field]
+                      ? "text-sm top-1 peer-focus:text-blue-500"
+                      : "peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-focus:top-3 peer-focus:text-sm peer-focus:text-blue-500"
+                  }
+                `}
+                >
                   {field.charAt(0).toUpperCase() + field.slice(1)}
                 </label>
               </div>
@@ -156,37 +215,78 @@ const Checkout = () => {
             <div className="space-y-4">
               {cartItems.map((item) => (
                 <motion.div
-                  key={item.id}
+                  key={item._id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   className="flex items-center justify-between bg-white p-3 rounded-lg shadow"
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={item.image}
-                      alt={item.name}
+                      src={item.product.image} // Use item.product.image
+                      alt={item.product.name} // Use item.product.name
                       className="w-14 h-14 rounded-md"
                     />
                     <div>
-                      <h3 className="text-lg font-medium">{item.name}</h3>
+                      <h3 className="text-lg font-medium">
+                        {item.product.name} {/* Use item.product.name */}
+                      </h3>
                       <p className="text-gray-500">Qty: {item.qty}</p>
                     </div>
                   </div>
                   <p className="text-lg font-semibold">
-                    ₹{item.price * item.qty}
+                    ₹{item.product.price * item.qty}{" "}
+                    {/* Use item.product.price */}
                   </p>
                 </motion.div>
               ))}
+
+              {/* Coupon Section */}
+              <div className="border-t border-gray-300 pt-4">
+                {!couponApplied ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter coupon code"
+                      value={coupon}
+                      onChange={(e) => setCoupon(e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                    <button
+                      onClick={applyCoupon}
+                      className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between bg-green-100 p-3 rounded-lg">
+                    <span className="text-green-700">🎉 {couponMessage}</span>
+                    <button
+                      onClick={removeDiscount}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Total and Discounted Total */}
+              <div className="border-t border-gray-300 pt-4 text-lg font-bold flex justify-between">
+                <span>Subtotal:</span>
+                <span>₹{total}</span>
+              </div>
+              {discount > 0 && (
+                <div className="text-lg font-bold flex justify-between">
+                  <span>Discount:</span>
+                  <span>-₹{discount}</span>
+                </div>
+              )}
               <div className="border-t border-gray-300 pt-4 text-lg font-bold flex justify-between">
                 <span>Total:</span>
-                <span>
-                  ₹
-                  {cartItems.reduce(
-                    (acc, item) => acc + item.price * item.qty,
-                    0
-                  )}
-                </span>
+                <span>₹{discountedTotal}</span>
               </div>
+
               <Link
                 to="/cart"
                 className="block text-center bg-gray-300 text-gray-700 py-2 rounded-lg hover:scale-105 transition-all shadow-md"

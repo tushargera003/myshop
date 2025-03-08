@@ -98,6 +98,52 @@ const OrderHistory = () => {
     }
   };
 
+  const downloadInvoice = async (orderId) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/orders/invoice/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `invoice_${orderId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.message || "Failed to download invoice", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      toast.error("Failed to download invoice", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+  };
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -136,9 +182,25 @@ const OrderHistory = () => {
                   >
                     🆔 Order ID: #{order._id}
                   </p>
-                  <p className="text-gray-700 font-medium">
-                    💰 <strong>Total:</strong> ₹{order.totalPrice}
-                  </p>
+                  {order.coupon ? (
+                    <>
+                      <p className="text-gray-700 font-medium">
+                        💰 <strong>Total:</strong> ₹{order.originalTotal}
+                      </p>
+                      <p className="text-gray-700 font-medium">
+                        🎫 <strong>Coupon Used:</strong> {order.coupon.code} (₹
+                        {order.originalTotal - order.discountedTotal} off)
+                      </p>
+                      <p className="text-gray-700 font-medium">
+                        💸 <strong>Final Total:</strong> ₹
+                        {order.discountedTotal}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-gray-700 font-medium">
+                      💰 <strong>Total:</strong> ₹{order.originalTotal}
+                    </p>
+                  )}
                   <p className="text-gray-600">
                     📅 <strong>Date:</strong>{" "}
                     {new Date(order.createdAt).toLocaleDateString()}
@@ -178,6 +240,18 @@ const OrderHistory = () => {
                     {order.shippingAddress.country} -{" "}
                     {order.shippingAddress.postalCode}
                   </p>
+                  <p className="text-gray-700">
+                    📞 <strong>Phone Number:</strong>{" "}
+                    {order.shippingAddress.phone}
+                  </p>
+                  <div className="mt-4">
+                    <button
+                      onClick={() => downloadInvoice(order._id)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all"
+                    >
+                      Download Invoice
+                    </button>
+                  </div>
 
                   <div className="mt-4">
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">

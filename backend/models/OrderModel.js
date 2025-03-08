@@ -25,6 +25,7 @@ const orderSchema = new mongoose.Schema(
       city: { type: String, required: true },
       postalCode: { type: String, required: true },
       country: { type: String, required: true },
+      phone: { type: String, required: true },
     },
     paymentMethod: {
       type: String,
@@ -35,16 +36,21 @@ const orderSchema = new mongoose.Schema(
     paidAt: { type: Date },
     isDelivered: { type: Boolean, required: true, default: false },
     deliveredAt: { type: Date },
-    totalPrice: { type: Number, required: true },
+    originalTotal: { type: Number, required: true },
+    discountedTotal: { type: Number, required: true },
     status: {
       type: String,
       required: true,
       enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
       default: "Pending",
     },
+    coupon: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Coupon", // Reference to the Coupon model
+      default: null, // Optional field
+    },
   },
   { timestamps: true }
 );
-
 const Order = mongoose.model("Order", orderSchema);
 export default Order;
