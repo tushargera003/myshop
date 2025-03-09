@@ -8,6 +8,7 @@ import userRoutes from "./routes/userRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
+import invoiceRoutes from "./routes/invoiceRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js"; // Import Chat Routes
 import faqRoutes from "./routes/faqRoutes.js"; // Import FAQ Routes
@@ -84,9 +85,17 @@ app.get("/", (req, res) => {
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
+  // Join a room based on the user's ID
+  socket.on("joinRoom", (userId) => {
+    socket.join(userId); // Join the room with the user's ID
+    console.log(`User ${userId} joined room ${userId}`);
+  });
+
   // Listen for chat messages
   socket.on("sendMessage", (message) => {
-    io.emit("newMessage", message); // Broadcast the message to all clients
+    const { receiver } = message; // Extract the receiver's ID from the message
+    io.to(receiver).emit("newMessage", message); // Emit the message only to the receiver's room
+    console.log(`Message sent to ${receiver}`);
   });
 
   // Handle disconnection

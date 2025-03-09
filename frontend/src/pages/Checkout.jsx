@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import axios from "axios"; // Import axios for coupon API call
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 const Checkout = () => {
   const { cartItems, clearCart, loading } = useContext(CartContext); // Destructure clearCart
   const navigate = useNavigate();
@@ -14,10 +15,9 @@ const Checkout = () => {
   const [discount, setDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState(false); // Track if coupon is applied
   const [couponMessage, setCouponMessage] = useState(""); // Success or error message
-
-  // Apply Coupon Function
   const [couponId, setCouponId] = useState(null); // Track coupon ID
 
+  // Apply Coupon Function
   const applyCoupon = async () => {
     // Check if the user is logged in
     const token = localStorage.getItem("token");
@@ -103,6 +103,19 @@ const Checkout = () => {
       return; // Stop further execution
     }
 
+    // Check if payment method is COD
+    if (formData.paymentMethod !== "COD") {
+      toast.error("This payment method is currently not available.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return; // Stop further execution
+    }
+
     const order = {
       items: cartItems.map((item) => ({
         product: item.product._id,
@@ -141,11 +154,7 @@ const Checkout = () => {
       );
 
       if (response.ok) {
-        if (formData.paymentMethod === "COD") {
-          navigate("/order-confirmation", { state: { fromCheckout: true } });
-        } else {
-          navigate("/payment", { state: { order } });
-        }
+        navigate("/order-confirmation", { state: { fromCheckout: true } });
         setTimeout(() => clearCart(), 500); // Clear cart after navigation
       } else {
         console.error("Order submission failed");

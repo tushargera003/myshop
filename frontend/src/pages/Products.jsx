@@ -10,7 +10,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("");
-  const { cartItems, setCartItems } = useContext(CartContext);
+  const { addToCart } = useContext(CartContext); // Use addToCart from CartContext
   const { wishlistItems, addToWishlist, removeFromWishlist } =
     useContext(WishlistContext);
 
@@ -34,17 +34,7 @@ const Products = () => {
 
   // Add item to cart
   const handleAddToCart = (product) => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item._id === product._id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item._id === product._id ? { ...item, qty: item.qty + 1 } : item
-        );
-      } else {
-        return [...prevItems, { ...product, qty: 1 }];
-      }
-    });
-
+    addToCart(product._id, 1); // Use addToCart from CartContext
     toast.success(`${product.name} added to cart!`, {
       position: "top-right",
       autoClose: 2000,

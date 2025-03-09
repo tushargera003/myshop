@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import io from "socket.io-client";
 
-const socket = io("http://localhost:5000", {
+const socket = io(import.meta.env.VITE_BACKEND_URL, {
   transports: ["websocket"], // Use WebSocket transport only
 });
 
@@ -10,107 +10,85 @@ const LiveChat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
-  const [user, setUser] = useState(null); // State to store user details
+  const [user, setUser] = useState(null);
 
-  // Get token from local storage
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    // Fetch user details using the token
     const fetchUserDetails = async () => {
       try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        };
         const res = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/api/user/me`,
-          config
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        setUser(res.data); // Set user details in state
-
-        // Join the user's room for private messaging
+        setUser(res.data);
         socket.emit("joinRoom", res.data._id);
       } catch (error) {
-        console.error("Error fetching user details:", error);
+        console.error("Error fetching user:", error);
       }
     };
-
     fetchUserDetails();
   }, [token]);
 
   useEffect(() => {
-    if (!user) return; // Don't proceed if user details are not fetched yet
+    if (!user) return;
 
-    // Fetch previous messages
     const fetchMessages = async () => {
       try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        };
+        const adminId = "67cc5b11bf7771ee49194cf5";
+        const conversationId = [user._id, adminId].sort().join("_");
         const res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/chat/admin`,
-          config
+          `${import.meta.env.VITE_BACKEND_URL}/api/chat/${conversationId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setMessages(res.data);
-
-        // Calculate unread messages
-        const unread = res.data.filter(
-          (msg) => msg.receiver === user._id && !msg.isRead
-        ).length;
-        setUnreadCount(unread);
+        setUnreadCount(
+          res.data.filter((msg) => msg.receiver === user._id && !msg.isRead)
+            .length
+        );
       } catch (error) {
         console.error("Error fetching messages:", error);
       }
     };
-
     fetchMessages();
+  }, [user, token]);
 
-    // Listen for new messages
-    socket.on("newMessage", (message) => {
-      // Check if the message already exists in the state
-      if (!messages.some((msg) => msg._id === message._id)) {
-        setMessages((prev) => [...prev, message]);
-
-        // If the new message is for the current user, increment unread count
-        if (message.receiver === user._id) {
-          setUnreadCount((prev) => prev + 1);
-        }
+  // 🔥 Fix: Optimized socket listener using useCallback
+  const handleNewMessage = useCallback(
+    (message) => {
+      setMessages((prev) => [...prev, message]);
+      if (message.receiver === user?._id) {
+        setUnreadCount((prev) => prev + 1);
       }
-    });
+    },
+    [user]
+  );
 
-    // Cleanup on unmount
-    return () => {
-      socket.off("newMessage");
-    };
-  }, [token, user, messages]); // Add messages to dependency array
+  useEffect(() => {
+    socket.on("newMessage", handleNewMessage);
+    return () => socket.off("newMessage", handleNewMessage);
+  }, [handleNewMessage]);
 
   const sendMessage = async () => {
-    try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+    if (!newMessage.trim()) return;
 
+    try {
+      const adminId = "67cc5b11bf7771ee49194cf5";
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/chat/send`,
-        { receiverId: "admin", message: newMessage },
-        config
+        { receiverId: adminId, message: newMessage },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      setMessages((prev) => [...prev, res.data]); // 🔥 Fix: Show message immediately
+      socket.emit("sendMessage", res.data);
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
 
-  if (!user) {
-    return <div>Loading...</div>; // Show loading state until user details are fetched
-  }
-
+  if (!user) return <div>Loading...</div>;
   return (
     <div>
       {/* Unread Count Badge */}
@@ -120,6 +98,7 @@ const LiveChat = () => {
         </div>
       )}
 
+      {/* Chat Window */}
       <div className="h-64 overflow-y-auto mb-4">
         {messages.map((msg) => (
           <div
@@ -137,6 +116,8 @@ const LiveChat = () => {
           </div>
         ))}
       </div>
+
+      {/* Message Input */}
       <div className="flex">
         <input
           type="text"
@@ -152,6 +133,24 @@ const LiveChat = () => {
           Send
         </button>
       </div>
+
+      {/* Optional: Link to an order or product */}
+      {/* <div className="mt-4">
+        <input
+          type="text"
+          value={orderId || ""}
+          onChange={(e) => setOrderId(e.target.value)}
+          placeholder="Order ID (optional)"
+          className="p-2 border border-gray-300 rounded"
+        />
+        <input
+          type="text"
+          value={productId || ""}
+          onChange={(e) => setProductId(e.target.value)}
+          placeholder="Product ID (optional)"
+          className="ml-2 p-2 border border-gray-300 rounded"
+        />
+      </div> */}
     </div>
   );
 };

@@ -4,7 +4,9 @@ import Order from "../models/OrderModel.js";
 import Product from "../models/ProductModel.js";
 import {protect , admin} from "../middleware/authMiddleware.js";
 const router = express.Router();
-
+import {
+  adminGetConversations,
+} from "../controllers/chatController.js";
 // Get all users
 router.get("/users",protect , admin, async (req, res) => {
   try {
@@ -144,4 +146,5 @@ router.get("/stats", protect, admin, async (req, res) => {
     }
   });
   
+  router.get("/conversations", protect, admin, adminGetConversations);
 export default router;
