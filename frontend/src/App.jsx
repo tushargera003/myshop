@@ -14,7 +14,8 @@ import useUser from "./hooks/useUser"; // Import the custom hook
 import AboutUs from "./pages/AboutUs.jsx";
 import Wishlist from "./pages/Wishlist.jsx";
 import ProtectedRoute from "./components/ProtectedRoute"; // Import the ProtectedRoute component
-
+import ChatWidget from "./components/ChatWidget";
+import AdminChat from "./components/AdminChat.jsx";
 // Lazy-loaded pages
 const Home = lazy(() => import("./pages/Home"));
 const Products = lazy(() => import("./pages/Products"));
@@ -80,12 +81,14 @@ function App() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="orders" element={<AdminOrders />} />
+                <Route path="chatbot" element={<AdminChat />} />
                 <Route path="products" element={<AdminProducts />} />
               </Route>
             </Routes>
           </Suspense>
         </div>
         <Footer />
+        <ChatWidget />
         <div>
           <ToastContainer
             position="top-right"

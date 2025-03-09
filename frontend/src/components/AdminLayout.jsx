@@ -45,6 +45,11 @@ const AdminLayout = () => {
                 Products
               </Link>
             </li>
+            <li>
+              <Link to="/admin/chatbot" className="hover:text-yellow-400">
+                chatbot
+              </Link>
+            </li>
           </ul>
         </nav>
       </aside>
