@@ -10,7 +10,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("");
-  const { addToCart } = useContext(CartContext);
+  const { cartItems, setCartItems } = useContext(CartContext);
   const { wishlistItems, addToWishlist, removeFromWishlist } =
     useContext(WishlistContext);
 
@@ -33,13 +33,22 @@ const Products = () => {
   }, [searchTerm, sortOption]);
 
   // Add item to cart
-  const handleAddToCart = async (product) => {
-    try {
-      await addToCart(product._id, 1);
-    } catch (error) {
-      console.error("Failed to add to cart:", error);
-      toast.error("Failed to add product to cart.");
-    }
+  const handleAddToCart = (product) => {
+    setCartItems((prevItems) => {
+      const existingItem = prevItems.find((item) => item._id === product._id);
+      if (existingItem) {
+        return prevItems.map((item) =>
+          item._id === product._id ? { ...item, qty: item.qty + 1 } : item
+        );
+      } else {
+        return [...prevItems, { ...product, qty: 1 }];
+      }
+    });
+
+    toast.success(`${product.name} added to cart!`, {
+      position: "top-right",
+      autoClose: 2000,
+    });
   };
 
   // Toggle wishlist
@@ -65,11 +74,57 @@ const Products = () => {
         🌟 Our Featured Products
       </h1>
 
+      {/* Search and Filter Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+        {/* Search Box */}
+        <div className="relative w-full sm:w-64">
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          />
+          <svg
+            className="absolute left-3 top-3 h-5 w-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+
+        {/* Sort Dropdown */}
+        <select
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value)}
+          className="w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        >
+          <option value="">Sort By</option>
+          <option value="priceAsc">Price: Low to High</option>
+          <option value="priceDesc">Price: High to Low</option>
+          <option value="nameAsc">Name: A to Z</option>
+          <option value="nameDesc">Name: Z to A</option>
+        </select>
+      </div>
+
       {/* Product List */}
       {products.length === 0 ? (
         <p className="text-center text-gray-500 text-lg">No products found.</p>
       ) : (
-        <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           {products.map((product) => {
             const isInWishlist = wishlistItems.some(
               (item) => item.product._id === product._id
@@ -77,6 +132,10 @@ const Products = () => {
             return (
               <motion.div
                 key={product._id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
                 className="bg-white/70 backdrop-blur-md p-5 rounded-xl shadow-lg border border-gray-200 relative"
               >
                 {/* Heart Icon */}
