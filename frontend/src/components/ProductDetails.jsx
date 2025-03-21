@@ -47,6 +47,11 @@ const ProductDetails = () => {
 
   // Toggle wishlist for main product
   const handleWishlist = () => {
+    let token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login to add to wishlist!");
+      return;
+    }
     const isInWishlist = wishlistItems.some(
       (item) => item.product._id === product._id
     );

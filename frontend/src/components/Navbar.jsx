@@ -2,32 +2,31 @@ import { useState, useEffect, useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { CartContext } from "../context/CartContext.jsx";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
 import { Menu, X, ShoppingCart, User } from "lucide-react";
-import useUser from "../hooks/useUser"; // Import the useUser hook
+import useUser from "../hooks/useUser";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { cartItems } = useContext(CartContext);
-  const { user, loading } = useUser(); // Use the useUser hook
+  const { user, loading, updateUser } = useUser();
   const navigate = useNavigate();
-  const location = useLocation(); // Get current location
+  const location = useLocation();
 
-  // Close dropdown and mobile menu when location changes
   useEffect(() => {
     setMenuOpen(false);
     setProfileOpen(false);
   }, [location]);
 
-  // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    toast.success("Logged out successfully!", { autoClose: 2000 });
+    updateUser();
     navigate("/auth");
-    window.location.reload(); // Reload the page to reset the state
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -38,29 +37,23 @@ const Navbar = () => {
         setProfileOpen(false);
       }
     };
-
     document.addEventListener("click", handleClickOutside);
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, [profileOpen]);
 
-  // Calculate total items in cart
   const totalItems = cartItems.reduce((total, item) => total + item.qty, 0);
 
-  if (loading) {
-    return null; // Show nothing while loading
-  }
+  if (loading) return null;
 
   return (
     <nav className="bg-blue-600 text-white p-4 shadow-lg sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center">
-        {/* Logo */}
         <Link to="/" className="text-3xl font-bold tracking-wide">
           MyShop
         </Link>
 
-        {/* Desktop Links */}
         <div className="hidden md:flex space-x-6 text-lg font-medium">
           <Link
             to="/"
@@ -142,7 +135,7 @@ const Navbar = () => {
                       to="/wishlist"
                       className="block px-4 py-2 hover:bg-gray-200"
                     >
-                      My wishlist
+                      My Wishlist
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -166,7 +159,6 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           className="md:hidden focus:outline-none"
@@ -175,7 +167,6 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -256,7 +247,7 @@ const Navbar = () => {
                         to="/wishlist"
                         className="block px-4 py-2 hover:bg-gray-200"
                       >
-                        My wishlist
+                        My Wishlist
                       </Link>
                       <button
                         onClick={handleLogout}

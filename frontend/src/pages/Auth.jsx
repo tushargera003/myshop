@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import useUser from "../hooks/useUser";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -14,31 +14,26 @@ const Auth = () => {
     password: "",
     phone: "",
   });
-  const [loginMethod, setLoginMethod] = useState("email"); // 'email' or 'phone'
-  const [errors, setErrors] = useState({
-    email: "",
-    phone: "",
-  });
+  const [loginMethod, setLoginMethod] = useState("email");
+  const [errors, setErrors] = useState({ email: "", phone: "" });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { updateUser } = useUser();
 
-  // Helper function to validate Gmail or Yahoo email
   const isValidEmail = (email) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|yahoo)\.com$/;
     return emailRegex.test(email);
   };
 
-  // Helper function to validate a 10-digit Indian phone number
   const isValidPhone = (phone) => {
-    const phoneRegex = /^[6-9]\d{9}$/; // Indian phone numbers start with 6-9 and have 10 digits
+    const phoneRegex = /^[6-9]\d{9}$/;
     return phoneRegex.test(phone);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Real-time validation
     if (name === "email" && value) {
       setErrors((prev) => ({
         ...prev,
@@ -62,22 +57,17 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Frontend validation for signup
     if (!isLogin) {
       if (!formData.name || !formData.email || !formData.phone) {
         toast.error("Name, Email, and Phone are required for signup");
         setIsLoading(false);
         return;
       }
-
-      // Validate email
       if (!isValidEmail(formData.email)) {
         toast.error("Please enter a valid Gmail or Yahoo email address");
         setIsLoading(false);
         return;
       }
-
-      // Validate phone number
       if (!isValidPhone(formData.phone)) {
         toast.error("Please enter a valid 10-digit Indian phone number");
         setIsLoading(false);
@@ -90,7 +80,6 @@ const Auth = () => {
         ? `${import.meta.env.VITE_BACKEND_URL}/api/user/login`
         : `${import.meta.env.VITE_BACKEND_URL}/api/user/signup`;
 
-      // Prepare data for login
       const loginData = isLogin
         ? {
             [loginMethod === "email" ? "email" : "phone"]:
@@ -104,14 +93,16 @@ const Auth = () => {
       });
 
       toast.success(
-        isLogin ? "Login Successful!" : "Signup Successful! Logging in..."
+        isLogin ? "Login Successful!" : "Signup Successful! Logging in...",
+        {
+          autoClose: 3000,
+        }
       );
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      setTimeout(() => {
-        window.location.reload(); // Refresh page to reflect login state
-      }, 2000);
+      updateUser();
+      navigate("/");
     } catch (error) {
       console.error("API Error:", error.response?.data || error);
       toast.error(error.response?.data?.message || "Something went wrong");
@@ -123,7 +114,7 @@ const Auth = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      navigate("/"); // Redirect to home if already logged in
+      navigate("/");
     }
   }, [navigate]);
 
@@ -133,7 +124,7 @@ const Auth = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 px-4 sm:px-6">
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* ToastContainer is NOT rendered here */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -141,7 +132,6 @@ const Auth = () => {
         className="w-full max-w-5xl bg-white shadow-2xl rounded-2xl flex flex-col md:flex-row relative overflow-hidden"
         style={{ minHeight: "500px" }}
       >
-        {/* Left Side - Form Container */}
         <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 sm:p-10">
           <motion.h2
             key={isLogin ? "login-heading" : "signup-heading"}
@@ -212,7 +202,6 @@ const Auth = () => {
               </>
             )}
 
-            {/* Login Method Toggle */}
             {isLogin && (
               <div className="flex items-center space-x-4">
                 <button
@@ -240,7 +229,6 @@ const Auth = () => {
               </div>
             )}
 
-            {/* Email or Phone Input */}
             {isLogin && (
               <input
                 type={loginMethod === "email" ? "email" : "text"}
@@ -257,7 +245,6 @@ const Auth = () => {
               />
             )}
 
-            {/* Password Input */}
             <input
               type="password"
               name="password"
@@ -281,7 +268,6 @@ const Auth = () => {
             </button>
           </form>
 
-          {/* Google Login */}
           <div className="mt-6 flex justify-center">
             <button
               className="p-2 bg-white border border-gray-300 rounded-full hover:bg-gray-100 transition-all flex items-center gap-2 px-4"
@@ -294,7 +280,6 @@ const Auth = () => {
             </button>
           </div>
 
-          {/* Toggle Option */}
           <p className="text-gray-600 text-center mt-4">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
             <span
@@ -306,7 +291,6 @@ const Auth = () => {
           </p>
         </div>
 
-        {/* Right Side - Animated Text (Hidden on small screens) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

@@ -35,14 +35,19 @@ const Products = () => {
   // Add item to cart
   const handleAddToCart = (product) => {
     addToCart(product._id, 1); // Use addToCart from CartContext
-    toast.success(`${product.name} added to cart!`, {
-      position: "top-right",
-      autoClose: 2000,
-    });
+    // toast.success(`${product.name} added to cart!`, {
+    //   position: "top-right",
+    //   autoClose: 2000,
+    // });
   };
 
   // Toggle wishlist
   const handleWishlist = (product) => {
+    let token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login to add to wishlist!");
+      return;
+    }
     const isInWishlist = wishlistItems.some(
       (item) => item.product._id === product._id
     );

@@ -36,7 +36,7 @@ const io = new Server(server, {
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Max 100 requests per IP
+  max: 1000, // Max 1000 requests per IP
   message: "Too many requests from this IP, please try again later.",
 });
 

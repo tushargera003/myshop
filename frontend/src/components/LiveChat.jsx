@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import io from "socket.io-client";
+import { toast } from "react-toastify";
 
 const socket = io(import.meta.env.VITE_BACKEND_URL, {
-  transports: ["websocket"], // Use WebSocket transport only
+  transports: ["websocket"],
 });
 
 const LiveChat = () => {
@@ -15,6 +16,14 @@ const LiveChat = () => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
+    if (!token) {
+      toast.info("Please login to chat with us!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      // Instead of showing a "Loading..." spinner, we let the component render a simple message.
+      return;
+    }
     const fetchUserDetails = async () => {
       try {
         const res = await axios.get(
@@ -32,7 +41,6 @@ const LiveChat = () => {
 
   useEffect(() => {
     if (!user) return;
-
     const fetchMessages = async () => {
       try {
         const adminId = "67cc5b11bf7771ee49194cf5";
@@ -53,7 +61,6 @@ const LiveChat = () => {
     fetchMessages();
   }, [user, token]);
 
-  // 🔥 Fix: Optimized socket listener using useCallback
   const handleNewMessage = useCallback(
     (message) => {
       setMessages((prev) => [...prev, message]);
@@ -71,7 +78,6 @@ const LiveChat = () => {
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
-
     try {
       const adminId = "67cc5b11bf7771ee49194cf5";
       const res = await axios.post(
@@ -79,8 +85,7 @@ const LiveChat = () => {
         { receiverId: adminId, message: newMessage },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      setMessages((prev) => [...prev, res.data]); // 🔥 Fix: Show message immediately
+      setMessages((prev) => [...prev, res.data]);
       socket.emit("sendMessage", res.data);
       setNewMessage("");
     } catch (error) {
@@ -88,25 +93,33 @@ const LiveChat = () => {
     }
   };
 
-  if (!user) return <div>Loading...</div>;
+  // If there is no token, show a simple message.
+  if (!token) {
+    return (
+      <div className="p-4 text-center text-gray-600">
+        Please login to chat with us!
+      </div>
+    );
+  }
+
+  // Once token exists but user details are still loading, render nothing (or you could render a spinner)
+  if (!user) return null;
+
   return (
-    <div>
-      {/* Unread Count Badge */}
+    <div className="relative p-4 border rounded-lg">
       {unreadCount > 0 && (
         <div className="bg-red-500 text-white rounded-full px-2 py-1 text-sm absolute top-0 right-0">
           {unreadCount}
         </div>
       )}
-
-      {/* Chat Window */}
       <div className="h-64 overflow-y-auto mb-4">
         {messages.map((msg) => (
           <div
             key={msg._id}
             className={`p-2 my-1 rounded ${
               msg.sender === user._id
-                ? "bg-blue-100 ml-auto w-3/4" // User's messages on the right
-                : "bg-gray-100 mr-auto w-3/4" // Admin's messages on the left
+                ? "bg-blue-100 ml-auto w-3/4"
+                : "bg-gray-100 mr-auto w-3/4"
             }`}
           >
             {msg.message}
@@ -116,8 +129,6 @@ const LiveChat = () => {
           </div>
         ))}
       </div>
-
-      {/* Message Input */}
       <div className="flex">
         <input
           type="text"
@@ -133,24 +144,6 @@ const LiveChat = () => {
           Send
         </button>
       </div>
-
-      {/* Optional: Link to an order or product */}
-      {/* <div className="mt-4">
-        <input
-          type="text"
-          value={orderId || ""}
-          onChange={(e) => setOrderId(e.target.value)}
-          placeholder="Order ID (optional)"
-          className="p-2 border border-gray-300 rounded"
-        />
-        <input
-          type="text"
-          value={productId || ""}
-          onChange={(e) => setProductId(e.target.value)}
-          placeholder="Product ID (optional)"
-          className="ml-2 p-2 border border-gray-300 rounded"
-        />
-      </div> */}
     </div>
   );
 };

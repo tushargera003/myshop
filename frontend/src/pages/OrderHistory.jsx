@@ -121,6 +121,10 @@ const OrderHistory = () => {
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
+        toast.success("Invoice downloaded succesfully", {
+          position: "top-right",
+          autoClose: 3000,
+        });
       } else {
         const errorData = await response.json();
         toast.error(errorData.message || "Failed to download invoice", {

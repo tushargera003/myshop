@@ -1,7 +1,8 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify"; // Import toast
+import { toast } from "react-toastify";
+import useUser from "../hooks/useUser";
 
 export const CartContext = createContext();
 
@@ -9,35 +10,30 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useUser(); // Listen for changes in user
 
-  // Function to get token
   const getToken = () => localStorage.getItem("token");
 
-  // Fetch cart from backend
   const fetchCart = async () => {
     try {
       const token = getToken();
       if (!token) {
-        // If not logged in, use local storage
+        // If not logged in, load cart from local storage
         const localCart = JSON.parse(localStorage.getItem("cartItems")) || [];
         setCartItems(localCart);
-        setLoading(false); // Set loading to false
+        setLoading(false);
         return;
       }
-
-      // Fetch cart from backend if logged in
+      // If logged in, fetch cart from backend
       const { data } = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/cart`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       if (Array.isArray(data.items)) {
         setCartItems(data.items);
-        localStorage.removeItem("cartItems"); // Remove old local cart
+        localStorage.removeItem("cartItems");
       } else {
-        setCartItems([]); // If invalid response, set empty cart
+        setCartItems([]);
       }
     } catch (error) {
       console.error("Failed to fetch cart:", error);
@@ -47,40 +43,36 @@ export const CartProvider = ({ children }) => {
         navigate("/auth");
       }
     } finally {
-      setLoading(false); // Set loading to false after fetch completes
+      setLoading(false);
     }
   };
 
-  // Fetch cart on component mount
+  // Re-fetch the cart whenever the user changes
   useEffect(() => {
-    const token = getToken();
-    if (token) {
-      fetchCart(); // Fetch backend cart when logged in
+    if (user) {
+      fetchCart();
     } else {
       const localCart = JSON.parse(localStorage.getItem("cartItems")) || [];
-      setCartItems(localCart); // Load from local storage if not logged in
-      setLoading(false); // Set loading to false
+      setCartItems(localCart);
+      setLoading(false);
     }
-  }, []); // Run only on mount
+  }, [user]);
 
-  // Add item to cart
+  // Add to cart function (unchanged)
   const addToCart = async (productId, qty) => {
     try {
       const token = getToken();
       let productName = "";
 
-      // Fetch product details to get the name
       const productResponse = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/admin/product/${productId}`
       );
-      productName = productResponse.data.name; // Get product name
+      productName = productResponse.data.name;
 
       if (!token) {
-        // If not logged in, add to local storage
         const existingItemIndex = cartItems.findIndex(
           (item) => item.product._id === productId
         );
-
         let updatedCart;
         if (existingItemIndex >= 0) {
           updatedCart = [...cartItems];
@@ -88,7 +80,6 @@ export const CartProvider = ({ children }) => {
         } else {
           updatedCart = [...cartItems, { product: productResponse.data, qty }];
         }
-
         setCartItems(updatedCart);
         localStorage.setItem("cartItems", JSON.stringify(updatedCart));
         toast.success(`${productName} added to cart!`, {
@@ -98,25 +89,24 @@ export const CartProvider = ({ children }) => {
         return;
       }
 
-      // If logged in, add to backend cart
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/cart/add`,
         { productId, qty },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      fetchCart(); // Refresh cart items
+      fetchCart();
       toast.success(`${productName} added to cart!`, {
         position: "top-right",
         autoClose: 2000,
       });
     } catch (error) {
       console.error("Failed to add to cart:", error);
-      toast.error("Failed to add item to cart!"); // Show error toast
+      toast.error("Failed to add item to cart!");
     }
   };
 
-  // Update quantity
+  // updateQty, removeFromCart, clearCart functions remain unchanged
+
   const updateQty = async (productId, qty) => {
     try {
       const token = getToken();
@@ -126,25 +116,22 @@ export const CartProvider = ({ children }) => {
         );
         setCartItems(updatedCart);
         localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-        toast.success("Quantity updated in cart!"); // Show toast
+        toast.success("Quantity updated in cart!");
         return;
       }
-
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/cart/update`,
         { productId, qty },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       fetchCart();
-      toast.success("Quantity updated in cart!"); // Show toast
+      toast.success("Quantity updated in cart!");
     } catch (error) {
       console.error("Failed to update quantity:", error);
-      toast.error("Failed to update quantity in cart!"); // Show error toast
+      toast.error("Failed to update quantity in cart!");
     }
   };
 
-  // Remove item from cart
   const removeFromCart = async (productId) => {
     try {
       const token = getToken();
@@ -154,80 +141,41 @@ export const CartProvider = ({ children }) => {
         );
         setCartItems(updatedCart);
         localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-        toast.success("Item removed from cart!"); // Show toast
+        toast.success("Item removed from cart!");
         return;
       }
-
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/cart/remove`,
         { productId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       fetchCart();
-      toast.success("Item removed from cart!"); // Show toast
+      toast.success("Item removed from cart!");
     } catch (error) {
       console.error("Failed to remove from cart:", error);
-      toast.error("Failed to remove item from cart!"); // Show error toast
+      toast.error("Failed to remove item from cart!");
     }
   };
 
-  // Clear cart
   const clearCart = async () => {
     try {
       const token = getToken();
       if (!token) {
         setCartItems([]);
         localStorage.removeItem("cartItems");
-
         return;
       }
-
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/cart/clear`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       setCartItems([]);
       localStorage.removeItem("cartItems");
     } catch (error) {
       console.error("Failed to clear cart:", error);
     }
   };
-
-  // Sync local cart with backend
-  const syncCart = async () => {
-    const token = getToken();
-    if (token) {
-      const localCart = JSON.parse(localStorage.getItem("cartItems")) || [];
-      if (localCart.length > 0) {
-        for (const item of localCart) {
-          const existingItem = cartItems.find(
-            (cartItem) => cartItem.product._id === item.product._id
-          );
-
-          if (existingItem) {
-            await updateQty(item.product._id, existingItem.qty + item.qty);
-          } else {
-            await addToCart(item.product._id, item.qty);
-          }
-        }
-        localStorage.removeItem("cartItems");
-      }
-    }
-  };
-
-  // Fetch cart on component mount
-  useEffect(() => {
-    const token = getToken();
-    if (token) {
-      fetchCart(); // Fetch backend cart when logged in
-    } else {
-      const localCart = JSON.parse(localStorage.getItem("cartItems")) || [];
-      setCartItems(localCart); // Load from local storage if not logged in
-    }
-  }, []); // Run only on mount
 
   return (
     <CartContext.Provider
